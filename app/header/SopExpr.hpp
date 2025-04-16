@@ -17,16 +17,26 @@ class inform::SopExpr : public mcsl::contig_base<ProdTerm> {
    public:
       SopExpr():_terms{} {}
       SopExpr(mcsl::arr_span<ProdTerm> terms):_terms{terms} {}
-      SopExpr copy() const;
-      static SopExpr makeRand();
+      SopExpr(SopExpr&& other):_terms(std::move(other._terms)) {}
+      SopExpr(const SopExpr& other):_terms(other._terms) {}
+      SopExpr&& move() { return std::move(self); }
+      SopExpr copy() const { return self; }
+      static SopExpr makeRand(uint termCount);
+      
+      SopExpr& operator=(SopExpr&& other) = default;
+      SopExpr& operator=(const SopExpr& other) = default;
 
       SopExpr& normalize();
 
-      SopExpr& operator&=(const ProdTerm& other);
-      SopExpr& operator&=(const SopExpr& other);
-
-      SopExpr& operator|=(const ProdTerm& other);
+      SopExpr& operator|=(const ProdTerm& term);
       SopExpr& operator|=(const SopExpr& other);
+      SopExpr& operator&=(const ProdTerm& term);
+      SopExpr& operator&=(const SopExpr& other);
+      
+      SopExpr operator|(const ProdTerm& other);
+      SopExpr operator|(const SopExpr& other);
+      SopExpr operator&(const ProdTerm& other);
+      SopExpr operator&(const SopExpr& other);
 
       #pragma region contig
       [[gnu::pure]] constexpr uint size() const { return _terms.size(); }

@@ -9,16 +9,32 @@
 
 inform::ProdTerm inform::ProdTerm::makeRand() {
    mcsl::pair<uint32, uint32> data = std::bit_cast<mcsl::pair<uint32,uint32>>(mcsl::rand() & mcsl::rand());
-   data.first &= data.second; //ensure canonical representation (all masked-out terms are 0)
-   return ProdTerm{data.first, data.second};
+   if (data.second) { [[likely]];
+      return ProdTerm{data.first, data.second};
+   }
+   [[unlikely]];
+   return makeRand();
 }
 
 inform::ProdTerm::Status inform::ProdTerm::operator[](ubyte i) {
    assume(i < (8 * sizeof(_varsMask)));
    if (!((_varsMask >> i) & 1)) {
-      return Status::FLOATING;
+      return Status::NULL;
    }
    return (_varVals >> i) & 1 ? TRUE : FALSE;
+}
+
+inform::ProdTerm& inform::ProdTerm::operator&=(const ProdTerm& other) {
+   if (_varsMask & other._varsMask) { //if theres overlap
+      if (_varVals & _varsMask != other._varVals & other._varsMask) { //overlap must be the same
+         _varsMask = 0;
+         _varVals = 0;
+         return self;
+      }
+   }
+   // (ulong&)self |= std::bit_cast<unsigned long>(other);
+   _varVals |= other._varVals;
+   _varsMask |= other._varsMask;
 }
 
 #endif
