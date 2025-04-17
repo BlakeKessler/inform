@@ -17,24 +17,31 @@ inform::ProdTerm inform::ProdTerm::makeRand() {
 }
 
 inform::ProdTerm::Status inform::ProdTerm::operator[](ubyte i) {
-   assume(i < (8 * sizeof(_varsMask)));
-   if (!((_varsMask >> i) & 1)) {
+   assume(i < (8 * sizeof(_mask)));
+   if (!((_mask >> i) & 1)) {
       return Status::NULL;
    }
-   return (_varVals >> i) & 1 ? TRUE : FALSE;
+   return (_vals >> i) & 1 ? TRUE : FALSE;
 }
 
 inform::ProdTerm& inform::ProdTerm::operator&=(const ProdTerm& other) {
-   if (_varsMask & other._varsMask) { //if theres overlap
-      if (_varVals & _varsMask != other._varVals & other._varsMask) { //overlap must be the same
-         _varsMask = 0;
-         _varVals = 0;
+   uint overlapMask = _mask & other._mask;
+   if (overlapMask) { //if theres overlap
+      if (_vals & overlapMask != other._vals & overlapMask) { //overlap must be the same
+         //set to contradiction
+         _mask = 0;
+         _vals = 0;
          return self;
       }
    }
    // (ulong&)self |= std::bit_cast<unsigned long>(other);
-   _varVals |= other._varVals;
-   _varsMask |= other._varsMask;
+   _vals |= other._vals;
+   _mask |= other._mask;
+   return self;
+}
+
+bool inform::ProdTerm::operator==(const ProdTerm& other) const {
+   return _mask == other._mask && _vals == other._vals;
 }
 
 #endif

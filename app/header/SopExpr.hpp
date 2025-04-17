@@ -38,6 +38,8 @@ class inform::SopExpr : public mcsl::contig_base<ProdTerm> {
       SopExpr operator&(const ProdTerm& other);
       SopExpr operator&(const SopExpr& other);
 
+      bool contains(const ProdTerm& term);
+
       #pragma region contig
       [[gnu::pure]] constexpr uint size() const { return _terms.size(); }
       [[gnu::pure]] constexpr uint capacity() const { return _terms.capacity(); }

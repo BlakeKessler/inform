@@ -13,11 +13,11 @@ struct inform::ProdTerm {
       };
 
    private:
-      uint32 _varVals; //value of variables
-      uint32 _varsMask; //which variables are actually part of the term
-      //!_varsMask -> (_varVals ? CONTRADICTION : TAUTOLOGY)
+      uint32 _vals; //value of variables
+      uint32 _mask; //which variables are actually part of the term
+      //!_mask -> (_vals ? CONTRADICTION : TAUTOLOGY)
    public:
-      ProdTerm(uint32 vars = 0, uint32 mask = 0):_varVals{vars & mask},_varsMask{mask} {}
+      ProdTerm(uint32 vars = 0, uint32 mask = 0):_vals{vars & mask},_mask{mask} {}
       ProdTerm copy() const { return self; }
       static ProdTerm makeRand();
 
@@ -26,6 +26,12 @@ struct inform::ProdTerm {
       ProdTerm& operator&=(const ProdTerm& other);
       ProdTerm operator&(const ProdTerm& other) const { return copy() &= other; }
       SopExpr operator|(const ProdTerm& other) const;
+
+      bool isContradiction() const;
+      bool isTautology() const;
+
+      bool operator==(const ProdTerm& other) const;
+      bool implies(const ProdTerm& other) const;
 
 } alignas(uint64);
 

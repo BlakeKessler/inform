@@ -14,8 +14,8 @@ class inform::PremiseSet {
    public:
       PremiseSet(const mcsl::arr_span<SopExpr> exprs);
 
-      const mcsl::arr_span<SopExpr> exprs() const;
-      const SopExpr conclusion() const;
+      const mcsl::arr_span<SopExpr> exprs() const { return _exprs.span(); }
+      const SopExpr conclusion() const { return _conclusion; }
       const SopExpr randConcSubset() const;
 };
 
