@@ -3,11 +3,14 @@
 
 #include "SopExpr.hpp"
 
+//!generate a random sum-of-products expression
 inform::SopExpr inform::SopExpr::makeRand(uint termCount) {
    SopExpr expr{};
-   while (expr.size() < termCount) {
+   while (expr._terms.size() < termCount) {
       const ProdTerm newTerm = ProdTerm::makeRand();
-      if (newTerm.isContradiction() || newTerm.isTautology()) { //filter out contradictions and tautologies
+
+      //filter out contradictions and tautologies
+      if (newTerm.isContradiction() || newTerm.isTautology()) {
          continue;
       }
       
@@ -20,11 +23,14 @@ inform::SopExpr inform::SopExpr::makeRand(uint termCount) {
             ++i;
             while (i < expr._terms.size()) {
                if (newTerm.implies(expr._terms[i])) { //new term implies term i, so it can be removed
+                  //move back term over term i
                   expr._terms[i] = expr._terms.back();
                   expr._terms.pop_back();
-                  if (i == expr._terms.size()) { [[unlikely]];
+
+                  if (i == expr._terms.size()) { [[unlikely]]; //break out of for loop and skip pushing the new node (since it has already overwritten a redundant term)
                      goto AFTER_FINALLY;
                   }
+                  //skip increment
                   continue;
                }
                ++i;
@@ -39,15 +45,18 @@ inform::SopExpr inform::SopExpr::makeRand(uint termCount) {
    return expr.move();
 }
 
-inform::SopExpr& inform::SopExpr::normalize() {
+//!remove redundant terms
+inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a private method
    for (uint i = 1; i < _terms.size(); ++i) {
       for (uint j = 0; j < i;) {
          if (_terms[j].implies(_terms[i])) {
+            //move back term over term i
             _terms[i] = _terms.back();
             _terms.pop_back();
             if (i == _terms.size()) { [[unlikely]];
                return self;
             }
+            //ensure that the new term i (former back item) is checked
             j = 0;
             continue;
          }
@@ -58,25 +67,25 @@ inform::SopExpr& inform::SopExpr::normalize() {
 }
 
 inform::SopExpr& inform::SopExpr::operator|=(const ProdTerm& term) {
-   push_back(term);
+   _terms.push_back(term);
    return self;
+   //!TODO: normalize as each term is pushed (will be asymptotically faster than calling normalize() after)
 }
 inform::SopExpr& inform::SopExpr::operator|=(const SopExpr& other) {
-   for (const auto& term : other) {
-      push_back(term);
+   for (const auto& term : other._terms) {
+      _terms.push_back(term);
    }
    return self;
+   //!TODO: normalize as each term is pushed (will be asymptotically faster than calling normalize() after)
 }
-
 inform::SopExpr& inform::SopExpr::operator&=(const ProdTerm& term) {
    for (uint i = 0; i < _terms.size();) {
       _terms[i] &= term;
       if (_terms[i].isContradiction()) {
+         //move back term over term i
          _terms[i] = _terms.back();
          _terms.pop_back();
-         if (i == _terms.size()) { [[unlikely]];
-            break;
-         }
+         //ensure the new term i (former back item) is checked
          continue;
       }
       ++i;
@@ -84,7 +93,10 @@ inform::SopExpr& inform::SopExpr::operator&=(const ProdTerm& term) {
    return normalize();
 }
 inform::SopExpr& inform::SopExpr::operator&=(const SopExpr& other) {
-   self = (self & other).move();
+   if (other._terms.size() == 1) {
+      return self &= other._terms[0];
+   }
+   return self = (self & other).move();
 }
 
 inform::SopExpr inform::SopExpr::operator|(const ProdTerm& other) {
@@ -96,18 +108,20 @@ inform::SopExpr inform::SopExpr::operator|(const SopExpr& other) {
 inform::SopExpr inform::SopExpr::operator&(const ProdTerm& other) {
    return (copy() &= other).move();
 }
-inform::SopExpr inform::SopExpr::operator&(const SopExpr& other) {
+inform::SopExpr inform::SopExpr::operator&(const SopExpr& other) { //!TODO: maybe make this a private constructor to avoid the move
    SopExpr expr{};
-   for (const auto& i : _terms) {
-      for (const auto& j : other._terms) {
-         const ProdTerm tmp = i & j;
-         if (!tmp.isContradiction()) {
-            expr.push_back(tmp);
+   expr._terms.reserve(_terms.size() * other._terms.size());
+   //(A+B)(C+D) = AC + AD + BC + BD
+   for (const auto& lhs : _terms) {
+      for (const auto& rhs : other._terms) {
+         //add the product of each unordered pair of terms with one element from each SopExpr
+         const ProdTerm tmp = lhs & rhs;
+         if (!tmp.isContradiction()) { [[likely]]; //push term if it is not a contradiction
+            expr._terms.push_back(tmp);
          }
       }
    }
-   expr.normalize();
-   return expr.move();
+   return expr.normalize().move();
 }
 
 #endif
