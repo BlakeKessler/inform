@@ -2,9 +2,10 @@
 #define INFORM_PROD_TERM_HPP
 
 #include "inform.hpp"
+#include <bit>
 
 //!product term
-struct inform::ProdTerm {
+struct alignas(uint64) inform::ProdTerm {
    public:
       enum Status : ubyte {
          FALSE = false,
@@ -21,7 +22,14 @@ struct inform::ProdTerm {
       ProdTerm copy() const { return self; }
       static ProdTerm makeRand();
 
-      Status operator[](ubyte i);
+      uint32 vals() const { return _vals; }
+      uint32 mask() const { return _mask; }
+
+      uint64 toInt() const { return std::bit_cast<uint64>(self); }
+      uint64 toUint() const { return std::bit_cast<uint64>(self); }
+      sint64 toSint() const { return std::bit_cast<sint64>(self); }
+
+      Status operator[](ubyte i) const;
 
       ProdTerm& operator&=(const ProdTerm& other);
       ProdTerm operator&(const ProdTerm& other) const { return copy() &= other; }
@@ -33,6 +41,10 @@ struct inform::ProdTerm {
       bool operator==(const ProdTerm& other) const;
       bool implies(const ProdTerm& other) const;
 
-} alignas(uint64);
+};
+
+namespace mcsl {
+   uint writef(File&, const inform::ProdTerm&, char, FmtArgs);
+};
 
 #endif

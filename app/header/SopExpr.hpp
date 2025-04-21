@@ -37,6 +37,15 @@ class inform::SopExpr {
       SopExpr operator|(const SopExpr& other);
       SopExpr operator&(const ProdTerm& other);
       SopExpr operator&(const SopExpr& other);
+
+      ProdTerm* begin() { return _terms.begin(); }
+      ProdTerm* end() { return _terms.end(); }
+      const ProdTerm* begin() const { return _terms.begin(); }
+      const ProdTerm* end() const { return _terms.end(); }
+};
+
+namespace mcsl {
+   uint writef(File&, const inform::SopExpr&, char, FmtArgs);
 };
 
 #endif

@@ -3,6 +3,8 @@
 
 #include "SopExpr.hpp"
 
+#include "io.hpp"
+
 //!generate a random sum-of-products expression
 inform::SopExpr inform::SopExpr::makeRand(uint termCount) {
    SopExpr expr{};
@@ -109,7 +111,7 @@ inform::SopExpr inform::SopExpr::operator&(const ProdTerm& other) {
    return (copy() &= other).move();
 }
 inform::SopExpr inform::SopExpr::operator&(const SopExpr& other) { //!TODO: maybe make this a private constructor to avoid the move
-   SopExpr expr{};
+   SopExpr expr;
    expr._terms.reserve(_terms.size() * other._terms.size());
    //(A+B)(C+D) = AC + AD + BC + BD
    for (const auto& lhs : _terms) {
@@ -122,6 +124,35 @@ inform::SopExpr inform::SopExpr::operator&(const SopExpr& other) { //!TODO: mayb
       }
    }
    return expr.normalize().move();
+}
+
+
+
+uint mcsl::writef(File& file, const inform::SopExpr& obj, char mode, FmtArgs fmt) {
+   switch (mode | CASE_BIT) {
+      case 'i': [[fallthrough]];
+      case 'u': [[fallthrough]];
+      case 'r': [[fallthrough]];
+      case 'b': [[fallthrough]];
+
+      case 'c': mcsl::__throw(ErrCode::FS_ERR, FMT("invalid format code (%%%c) for type"), mode);
+      case 's': break;
+   }
+
+   uint charsPrinted = 0;
+   const inform::ProdTerm* it = obj.begin();
+   const inform::ProdTerm* end = obj.end();
+
+   if (!it || it >= end) {
+      return charsPrinted;
+   }
+
+   charsPrinted += file.printf(FMT("(%s)"), *it);
+   while (++it < end) {
+      charsPrinted += file.printf(FMT(" ⋀ (%s)"), *it);
+   }
+
+   return charsPrinted;
 }
 
 #endif
