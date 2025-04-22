@@ -18,7 +18,8 @@ int main(int argc, char** argv) {
    uint termCount = mcsl::str_to_uint(argv[3], std::strlen(argv[3]));
 
    for (uint i = 0; i < proofsToGen; ++i) {
-      mcsl::printf(mcsl::FMT("============\n%s============\n"), inform::PremiseSet::makeRand(premsPerProof, termCount));
+      inform::PremiseSet::makeRand(premsPerProof, termCount);
+      // mcsl::printf(mcsl::FMT("============\n%s============\n"), inform::PremiseSet::makeRand(premsPerProof, termCount));
    }
 }
 

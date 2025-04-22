@@ -16,7 +16,7 @@ class inform::PremiseSet {
       PremiseSet(PremiseSet&&);
       PremiseSet(const PremiseSet&);
       PremiseSet&& move() { return std::move(self); }
-      PremiseSet copy() { return self; }
+      PremiseSet copy() const { return self; }
       static PremiseSet makeRand(uint premsPerProof, uint termCount);
 
       PremiseSet& operator=(PremiseSet&& other) = default;
