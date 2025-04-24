@@ -8,7 +8,7 @@
 #include "io.hpp"
 
 int main(int argc, char** argv) {
-   if (argc < 4) {
+   if (argc < 6) {
       mcsl::err_printf(mcsl::FMT("must pass 5 arguments\n"));
       return EXIT_FAILURE;
    }
