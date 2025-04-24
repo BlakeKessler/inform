@@ -53,13 +53,13 @@ uint mcsl::writef(File& file, const inform::PremiseSet& obj, char mode, FmtArgs 
    const inform::SopExpr* it = obj.begin();
    const inform::SopExpr* end = obj.end();
 
-   if (!it || it >= end) {
+   if (!it) {
       return charsPrinted;
    }
-
-   while (++it < end) {
+   for (; it < end; ++it) {
       charsPrinted += file.printf(FMT("%s\n"), *it);
    }
+
    charsPrinted += file.printf(FMT("⇒ %s\n"), obj.conclusion());
 
    return charsPrinted;
