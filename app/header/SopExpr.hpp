@@ -19,9 +19,11 @@ class inform::SopExpr {
       SopExpr(mcsl::arr_span<ProdTerm> terms):_terms{terms} {}
       SopExpr(SopExpr&& other):_terms(std::move(other._terms)) {}
       SopExpr(const SopExpr& other):_terms(other._terms) {}
-      SopExpr&& move() { return std::move(self); }
+
+      SopExpr(uint termCount);
+      
+      SopExpr move() { return std::move(self); }
       SopExpr copy() const { return self; }
-      static SopExpr makeRand(uint termCount);
       
       SopExpr& operator=(SopExpr&& other) = default;
       SopExpr& operator=(const SopExpr& other) = default;

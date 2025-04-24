@@ -15,9 +15,9 @@ class inform::PremiseSet {
       PremiseSet(const mcsl::arr_span<SopExpr> exprs);
       PremiseSet(PremiseSet&&);
       PremiseSet(const PremiseSet&);
-      PremiseSet&& move() { return std::move(self); }
+      PremiseSet(uint premsPerProof, uint termCount);
+      PremiseSet move() { return std::move(self); }
       PremiseSet copy() const { return self; }
-      static PremiseSet makeRand(uint premsPerProof, uint termCount);
 
       PremiseSet& operator=(PremiseSet&& other) = default;
       PremiseSet& operator=(const PremiseSet& other) = default;

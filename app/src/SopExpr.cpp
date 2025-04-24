@@ -6,9 +6,8 @@
 #include "io.hpp"
 
 //!generate a random sum-of-products expression
-inform::SopExpr inform::SopExpr::makeRand(uint termCount) {
-   SopExpr expr{};
-   while (expr._terms.size() < termCount) {
+inform::SopExpr::SopExpr(uint termCount) {
+   while (_terms.size() < termCount) {
       const ProdTerm newTerm = ProdTerm::makeRand();
 
       //filter out contradictions and tautologies
@@ -17,19 +16,19 @@ inform::SopExpr inform::SopExpr::makeRand(uint termCount) {
       }
       
       //find the location for the new term
-      for (uint i = 0; i < expr._terms.size(); ++i) {
-         if (newTerm.implies(expr._terms[i])) { //new term implies term i, so it can replace it
-            expr._terms[i] = newTerm;
+      for (uint i = 0; i < _terms.size(); ++i) {
+         if (newTerm.implies(_terms[i])) { //new term implies term i, so it can replace it
+            _terms[i] = newTerm;
 
             //remove redundant terms
             ++i;
-            while (i < expr._terms.size()) {
-               if (newTerm.implies(expr._terms[i])) { //new term implies term i, so it can be removed
+            while (i < _terms.size()) {
+               if (newTerm.implies(_terms[i])) { //new term implies term i, so it can be removed
                   //move back term over term i
-                  expr._terms[i] = expr._terms.back();
-                  expr._terms.pop_back();
+                  _terms[i] = _terms.back();
+                  _terms.pop_back();
 
-                  if (i == expr._terms.size()) { [[unlikely]]; //break out of for loop and skip pushing the new node (since it has already overwritten a redundant term)
+                  if (i == _terms.size()) { [[unlikely]]; //break out of for loop and skip pushing the new node (since it has already overwritten a redundant term)
                      goto AFTER_FINALLY;
                   }
                   //skip increment
@@ -40,11 +39,10 @@ inform::SopExpr inform::SopExpr::makeRand(uint termCount) {
          }
       }
       // finally {
-      expr._terms.push_back(newTerm);
+      _terms.push_back(newTerm);
       // }
       AFTER_FINALLY:
    }
-   return expr.move();
 }
 
 //!remove redundant terms

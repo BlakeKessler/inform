@@ -25,13 +25,10 @@ inform::PremiseSet::PremiseSet(const PremiseSet& other):
       
 }
 
-inform::PremiseSet inform::PremiseSet::makeRand(uint premsPerProof, uint termCount) {
-   mcsl::array<SopExpr> prems(premsPerProof);
+inform::PremiseSet::PremiseSet(uint premsPerProof, uint termCount):_exprs(premsPerProof) {
    for (uint i = 0; i < premsPerProof; ++i) {
-      prems[i] = SopExpr::makeRand(termCount).move();
+      new (_exprs + i) SopExpr(termCount);
    }
-   // return PremiseSet(prems.span());
-   return PremiseSet({prems.release(), premsPerProof}); //!TODO: this is so jank why is it necessary
 }
 
 
