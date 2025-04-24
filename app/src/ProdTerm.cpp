@@ -19,7 +19,7 @@ inform::ProdTerm inform::ProdTerm::makeRand() {
 inform::ProdTerm inform::ProdTerm::makeRand(uint maxVars, uint sparsity) {
    mcsl::pair<uint32, uint32> data = std::bit_cast<mcsl::pair<uint32,uint32>>(mcsl::rand());
    data.second &= ((1 << maxVars) - 1);
-   while (sparsity--) {
+   for (uint i = 0; i < sparsity; ++i) {
       data.second &= mcsl::rand();
    }
    if (data.second) { [[likely]];
