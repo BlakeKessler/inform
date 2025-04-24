@@ -30,6 +30,11 @@ inform::PremiseSet::PremiseSet(uint premsPerProof, uint termCount):_exprs(premsP
       new (_exprs + i) SopExpr(termCount);
    }
 }
+inform::PremiseSet::PremiseSet(uint premsPerProof, uint termCount, uint maxVars, uint sparsity):_exprs(premsPerProof) {
+   for (uint i = 0; i < premsPerProof; ++i) {
+      new (_exprs + i) SopExpr(termCount, maxVars, sparsity);
+   }
+}
 
 
 

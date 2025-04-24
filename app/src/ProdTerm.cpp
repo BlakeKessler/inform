@@ -9,12 +9,24 @@
 #include "io.hpp"
 
 inform::ProdTerm inform::ProdTerm::makeRand() {
-   mcsl::pair<uint32, uint32> data = std::bit_cast<mcsl::pair<uint32,uint32>>(mcsl::rand() & mcsl::rand());
+   mcsl::pair<uint32, uint32> data = std::bit_cast<mcsl::pair<uint32,uint32>>(mcsl::rand() & mcsl::rand() & mcsl::rand() & mcsl::rand());
    if (data.second) { [[likely]];
       return ProdTerm{data.first, data.second};
    }
    [[unlikely]];
    return makeRand();
+}
+inform::ProdTerm inform::ProdTerm::makeRand(uint maxVars, uint sparsity) {
+   mcsl::pair<uint32, uint32> data = std::bit_cast<mcsl::pair<uint32,uint32>>(mcsl::rand());
+   data.second &= ((1 << maxVars) - 1);
+   while (sparsity--) {
+      data.second &= mcsl::rand();
+   }
+   if (data.second) { [[likely]];
+      return ProdTerm{data.first, data.second};
+   }
+   [[unlikely]];
+   return makeRand(maxVars, sparsity);
 }
 
 inform::ProdTerm::Status inform::ProdTerm::operator[](ubyte i) const {

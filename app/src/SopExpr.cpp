@@ -44,6 +44,44 @@ inform::SopExpr::SopExpr(uint termCount) {
       AFTER_FINALLY:
    }
 }
+inform::SopExpr::SopExpr(uint termCount, uint maxVars, uint sparsity) {
+   while (_terms.size() < termCount) {
+      const ProdTerm newTerm = ProdTerm::makeRand(maxVars, sparsity);
+
+      //filter out contradictions and tautologies
+      if (newTerm.isContradiction() || newTerm.isTautology()) {
+         continue;
+      }
+      
+      //find the location for the new term
+      for (uint i = 0; i < _terms.size(); ++i) {
+         if (newTerm.implies(_terms[i])) { //new term implies term i, so it can replace it
+            _terms[i] = newTerm;
+
+            //remove redundant terms
+            ++i;
+            while (i < _terms.size()) {
+               if (newTerm.implies(_terms[i])) { //new term implies term i, so it can be removed
+                  //move back term over term i
+                  _terms[i] = _terms.back();
+                  _terms.pop_back();
+
+                  if (i == _terms.size()) { [[unlikely]]; //break out of for loop and skip pushing the new node (since it has already overwritten a redundant term)
+                     goto AFTER_FINALLY;
+                  }
+                  //skip increment
+                  continue;
+               }
+               ++i;
+            }
+         }
+      }
+      // finally {
+      _terms.push_back(newTerm);
+      // }
+      AFTER_FINALLY:
+   }
+}
 
 //!remove redundant terms
 inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a private method
@@ -147,7 +185,7 @@ uint mcsl::writef(File& file, const inform::SopExpr& obj, char mode, FmtArgs fmt
 
    charsPrinted += file.printf(FMT("(%s)"), *it);
    while (++it < end) {
-      charsPrinted += file.printf(FMT(" ⋀ (%s)"), *it);
+      charsPrinted += file.printf(FMT(" ⋁ (%s)"), *it);
    }
 
    return charsPrinted;

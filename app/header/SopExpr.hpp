@@ -21,6 +21,7 @@ class inform::SopExpr {
       SopExpr(const SopExpr& other):_terms(other._terms) {}
 
       SopExpr(uint termCount);
+      SopExpr(uint termCount, uint maxVars, uint sparsity);
       
       SopExpr move() { return std::move(self); }
       SopExpr copy() const { return self; }
