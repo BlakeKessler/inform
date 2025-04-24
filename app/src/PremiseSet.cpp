@@ -52,7 +52,7 @@ uint mcsl::writef(File& file, const inform::PremiseSet& obj, char mode, FmtArgs 
       return charsPrinted;
    }
 
-   while (it++ < end) {
+   while (++it < end) {
       charsPrinted += file.printf(FMT("%s\n"), *it);
    }
    charsPrinted += file.printf(FMT("⇒ %s\n"), obj.conclusion());

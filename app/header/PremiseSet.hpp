@@ -23,7 +23,7 @@ class inform::PremiseSet {
       PremiseSet& operator=(const PremiseSet& other) = default;
       
       const mcsl::arr_span<SopExpr> exprs() const { return _exprs.span(); }
-      const SopExpr conclusion() const { return _conclusion; }
+      const SopExpr& conclusion() const { return _conclusion; }
       const SopExpr randConcSubset() const;
 
       SopExpr* begin() { return _exprs.begin(); }
