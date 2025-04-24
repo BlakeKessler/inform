@@ -117,6 +117,11 @@ inform::SopExpr& inform::SopExpr::operator|=(const SopExpr& other) {
    //!TODO: normalize as each term is pushed (will be asymptotically faster than calling normalize() after)
 }
 inform::SopExpr& inform::SopExpr::operator&=(const ProdTerm& term) {
+   if (!_terms.size()) {
+      _terms.push_back(term);
+      return self;
+   }
+   
    for (uint i = 0; i < _terms.size();) {
       _terms[i] &= term;
       if (_terms[i].isContradiction()) {
@@ -134,7 +139,9 @@ inform::SopExpr& inform::SopExpr::operator&=(const SopExpr& other) {
    if (other._terms.size() == 1) {
       return self &= other._terms[0];
    }
-   return self = (self & other).move();
+   auto tmp = self & other;
+   std::destroy_at(this);
+   return *new (this) SopExpr(std::move(tmp));
 }
 
 inform::SopExpr inform::SopExpr::operator|(const ProdTerm& other) {
@@ -147,19 +154,29 @@ inform::SopExpr inform::SopExpr::operator&(const ProdTerm& other) {
    return (copy() &= other).move();
 }
 inform::SopExpr inform::SopExpr::operator&(const SopExpr& other) { //!TODO: maybe make this a private constructor to avoid the move
-   SopExpr expr;
-   expr._terms.reserve(_terms.size() * other._terms.size());
+   if (!_terms.size()) {
+      return other.copy();
+   }
+   if (!other._terms.size()) { [[unlikely]];
+      return copy();
+   }
+   
+   return SopExpr(self, other);
+}
+//private AND constructor
+inform::SopExpr::SopExpr(const SopExpr& lhs, const SopExpr& rhs) {
+   _terms.reserve(lhs._terms.size() * rhs._terms.size());
    //(A+B)(C+D) = AC + AD + BC + BD
-   for (const auto& lhs : _terms) {
-      for (const auto& rhs : other._terms) {
+   for (const auto& i : lhs._terms) {
+      for (const auto& j : rhs._terms) {
          //add the product of each unordered pair of terms with one element from each SopExpr
-         const ProdTerm tmp = lhs & rhs;
+         const ProdTerm tmp = i & j;
          if (!tmp.isContradiction()) { [[likely]]; //push term if it is not a contradiction
-            expr._terms.push_back(tmp);
+            _terms.push_back(tmp);
          }
       }
    }
-   return expr.normalize().move();
+   normalize();
 }
 
 

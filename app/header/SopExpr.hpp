@@ -14,6 +14,7 @@ class inform::SopExpr {
       //!TODO: maybe add a _baseTerm? maybe make a tree-like structure?
       mcsl::dyn_arr<ProdTerm> _terms;
 
+      SopExpr(const SopExpr& lhs, const SopExpr& rhs); //AND implementation constructor
    public:
       SopExpr():_terms{} {}
       SopExpr(mcsl::arr_span<ProdTerm> terms):_terms{terms} {}

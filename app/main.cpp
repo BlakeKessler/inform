@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
    uint sparsity = mcsl::str_to_uint(argv[5], std::strlen(argv[5]));
 
    for (uint i = 0; i < proofsToGen; ++i) {
-      // inform::PremiseSet(premsPerProof, termCount, maxVars, sparsity);
-      mcsl::printf(mcsl::FMT("============\n%s============\n"), inform::PremiseSet(premsPerProof, termCount, maxVars, sparsity));
+      auto tmp = inform::PremiseSet(premsPerProof, termCount, maxVars, sparsity);
+      mcsl::printf(mcsl::FMT("============\n%s============\n"), tmp);
    }
 }
 
