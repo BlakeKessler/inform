@@ -92,19 +92,27 @@ inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a priva
       for (uint j = 0; j < i;) {
          auto termJ = _terms[j];
          uint overlapMask = termI.mask() ^ termJ.mask();
+         if (!overlapMask) {
+            ++j;
+            continue;
+         }
+         uint diffMask = (termI.vals() & termI.mask()) ^ (termJ.vals() & termJ.mask());
+         ProdTerm newJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~diffMask);
 
          if (!termJ.implies(termI)) {
-            uint diffMask = (termI.vals() & termI.mask()) ^ (termJ.vals() & termJ.mask());
-            ProdTerm newJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~diffMask);
-            ProdTerm newI = ProdTerm::make(termI.vals(), termI.mask() & ~diffMask);
-            if (std::popcount(diffMask) != 1 || newI != newJ) {
-               ++j;
-               continue;
+            if (std::popcount(diffMask) != 1 || newJ != ProdTerm::make(termI.vals(), termI.mask() & ~diffMask)) {
+               if (std::popcount(overlapMask) == 1) { //masks overlap in only one place and the values at that place are different (anything else would be filtered out by the implies check)
+                  newJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~overlapMask);
+               }
+               else {
+                  ++j;
+                  continue;
+               }
             }
-            termJ = newJ;
-            _terms[j] = termJ;
          }
-
+         //write new term j
+         termJ = newJ;
+         _terms[j] = termJ;
          //move back term over term i
          if (i == _terms.size()) { [[unlikely]];
             return self;
