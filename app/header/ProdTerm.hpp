@@ -17,11 +17,14 @@ struct alignas(uint64) inform::ProdTerm {
       uint32 _vals; //value of variables
       uint32 _mask; //which variables are actually part of the term
       //!_mask -> (_vals ? CONTRADICTION : TAUTOLOGY)
+      ProdTerm(uint32 vars = 0, uint32 mask = 0):_vals{vars},_mask{mask} {}
    public:
-      ProdTerm(uint32 vars = 0, uint32 mask = 0):_vals{vars & mask},_mask{mask} {}
-      ProdTerm copy() const { return self; }
+      static ProdTerm make(uint32 vars = 0, uint32 mask = 0) { return {mask ? vars & mask : vars, mask}; }
+      static ProdTerm makeContradiction() { return {~0u, 0}; }
+      static ProdTerm makeTautology() { return {0, 0}; }
       static ProdTerm makeRand();
       static ProdTerm makeRand(uint maxVars, uint sparsity);
+      ProdTerm copy() const { return self; }
 
       uint32 vals() const { return _vals; }
       uint32 mask() const { return _mask; }

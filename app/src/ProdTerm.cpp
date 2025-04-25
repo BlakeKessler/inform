@@ -11,7 +11,7 @@
 inform::ProdTerm inform::ProdTerm::makeRand() {
    mcsl::pair<uint32, uint32> data = std::bit_cast<mcsl::pair<uint32,uint32>>(mcsl::rand() & mcsl::rand() & mcsl::rand() & mcsl::rand());
    if (data.second) { [[likely]];
-      return ProdTerm{data.first, data.second};
+      return make(data.first, data.second);
    }
    [[unlikely]];
    return makeRand();
@@ -23,7 +23,7 @@ inform::ProdTerm inform::ProdTerm::makeRand(uint maxVars, uint sparsity) {
       data.second &= mcsl::rand();
    }
    if (data.second) { [[likely]];
-      return ProdTerm{data.first, data.second};
+      return make(data.first, data.second);
    }
    [[unlikely]];
    return makeRand(maxVars, sparsity);
@@ -43,7 +43,7 @@ inform::ProdTerm& inform::ProdTerm::operator&=(const ProdTerm& other) {
       if ((_vals & overlapMask) != (other._vals & overlapMask)) { //overlap must be the same
          //set to contradiction
          _mask = 0;
-         _vals = 0;
+         _vals = -1;
          return self;
       }
    }

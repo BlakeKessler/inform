@@ -43,6 +43,7 @@ inform::SopExpr::SopExpr(uint termCount) {
       // }
       AFTER_FINALLY:
    }
+   normalize();
 }
 inform::SopExpr::SopExpr(uint termCount, uint maxVars, uint sparsity) {
    while (_terms.size() < termCount) {
@@ -81,24 +82,42 @@ inform::SopExpr::SopExpr(uint termCount, uint maxVars, uint sparsity) {
       // }
       AFTER_FINALLY:
    }
+   normalize();
 }
 
 //!remove redundant terms
 inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a private method
    for (uint i = 1; i < _terms.size(); ++i) {
+      auto termI = _terms[i];
       for (uint j = 0; j < i;) {
-         if (_terms[j].implies(_terms[i])) {
-            //move back term over term i
-            _terms[i] = _terms.back();
-            _terms.pop_back();
-            if (i == _terms.size()) { [[unlikely]];
-               return self;
+         auto termJ = _terms[j];
+         uint overlapMask = termI.mask() ^ termJ.mask();
+
+         if (!termJ.implies(termI)) {
+            uint diffMask = (termI.vals() & termI.mask()) ^ (termJ.vals() & termJ.mask());
+            ProdTerm newJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~diffMask);
+            ProdTerm newI = ProdTerm::make(termI.vals(), termI.mask() & ~diffMask);
+            if (std::popcount(diffMask) != 1 || newI != newJ) {
+               ++j;
+               continue;
             }
-            //ensure that the new term i (former back item) is checked
-            j = 0;
-            continue;
+            termJ = newJ;
+            _terms[j] = termJ;
          }
-         ++j;
+
+         //move back term over term i
+         if (i == _terms.size()) { [[unlikely]];
+            return self;
+         }
+         termI = _terms.back();
+         _terms[i] = termI;
+         _terms.pop_back();
+         if (i == _terms.size()) { [[unlikely]];
+            return self;
+         }
+         //ensure that the new term i (former back item) is checked
+         j = 0;
+         continue;
       }
    }
    return self;
@@ -133,7 +152,12 @@ inform::SopExpr& inform::SopExpr::operator&=(const ProdTerm& term) {
       }
       ++i;
    }
-   return normalize();
+   if (!_terms.size()) {
+      _terms.push_back(ProdTerm::makeContradiction());
+   } else {
+      normalize();
+   }
+   return self;
 }
 inform::SopExpr& inform::SopExpr::operator&=(const SopExpr& other) {
    if (other._terms.size() == 1) {
@@ -176,7 +200,11 @@ inform::SopExpr::SopExpr(const SopExpr& lhs, const SopExpr& rhs) {
          }
       }
    }
-   normalize();
+   if (!_terms.size()) {
+      _terms.push_back(ProdTerm::makeContradiction());
+   } else {
+      normalize();
+   }
 }
 
 
