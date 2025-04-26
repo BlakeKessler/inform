@@ -38,6 +38,16 @@ inform::ProdTerm::Status inform::ProdTerm::operator[](ubyte i) const {
 }
 
 inform::ProdTerm& inform::ProdTerm::operator&=(const ProdTerm& other) {
+   if (isContradiction()) {
+      return self;
+   }
+   if (other.isContradiction()) {
+      //set to contradiction
+      _vals = -1;
+      _mask = 0;
+      return self;
+   }
+   
    uint overlapMask = _mask & other._mask;
    if ((_vals & overlapMask) != (other._vals & overlapMask)) { //overlap must be the same
       //set to contradiction
