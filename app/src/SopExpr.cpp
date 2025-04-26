@@ -91,12 +91,23 @@ inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a priva
       auto termI = _terms[i];
       for (uint j = 0; j < i;) {
          auto termJ = _terms[j];
-         uint overlapMask = termI.mask() ^ termJ.mask();
+         if (termI.implies(termJ)) {
+            if (i < _terms.size()) {
+               _terms[j] = _terms.pop_back();
+               continue;
+            } else {
+               _terms.pop_back();
+               break;
+            }
+         }
+
+         uint overlapMask = ~(termI.mask() ^ termJ.mask());
          if (!overlapMask) {
             ++j;
             continue;
          }
          uint diffMask = (termI.vals() & termI.mask()) ^ (termJ.vals() & termJ.mask());
+         uint conflictMask = overlapMask & diffMask;
          ProdTerm newJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~diffMask);
 
          if (!termJ.implies(termI)) {
@@ -105,8 +116,26 @@ inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a priva
                   newJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~overlapMask);
                }
                else {
+                  ProdTerm noConflictJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~conflictMask);
+                  ProdTerm noConflictI = ProdTerm::make(termI.vals(), termI.mask() & ~conflictMask);
+                  if (std::popcount(conflictMask) == 1) {
+                     if (noConflictI == noConflictJ) {
+                        newJ = noConflictJ;
+                        goto JANK_LABEL;
+                     }
+                     else if (noConflictJ.implies(noConflictI)) {
+                        //BC + !A!BC == BC + !AC
+                        //termI unchanged, remove conflict term from termJ
+                        termJ = noConflictJ;
+                        _terms[j] = termJ;
+                     } else if (noConflictI.implies(noConflictJ)) {
+                        termI = noConflictI;
+                        _terms[i] = termI;
+                     }
+                  }
                   ++j;
                   continue;
+                  JANK_LABEL:
                }
             }
          }
