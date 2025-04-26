@@ -229,7 +229,13 @@ inform::SopExpr::SopExpr(const SopExpr& lhs, const SopExpr& rhs) {
    _terms.reserve(lhs._terms.size() * rhs._terms.size());
    //(A+B)(C+D) = AC + AD + BC + BD
    for (const auto& i : lhs._terms) {
+      if (i.isContradiction()) {
+         continue;
+      }
       for (const auto& j : rhs._terms) {
+         if (j.isContradiction()) {
+            continue;
+         }
          //add the product of each unordered pair of terms with one element from each SopExpr
          const ProdTerm tmp = i & j;
          if (!tmp.isContradiction()) { [[likely]]; //push term if it is not a contradiction
@@ -241,6 +247,9 @@ inform::SopExpr::SopExpr(const SopExpr& lhs, const SopExpr& rhs) {
       _terms.push_back(ProdTerm::makeContradiction());
    } else {
       normalize();
+      // if (!_terms.size()) {
+      //    _terms.push_back(ProdTerm::makeContradiction());
+      // }
    }
 }
 
