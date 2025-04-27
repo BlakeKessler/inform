@@ -81,10 +81,10 @@ uint mcsl::writef(File& file, const inform::ProdTerm& obj, char mode, FmtArgs fm
    }
 
    if (obj.isContradiction()) {
-      return writef(file, FMT("⊥"), mode, fmt);
+      return writef(file, inform::CONTRADICTION, mode, fmt);
    }
    if (obj.isTautology()) {
-      return writef(file, FMT("⊤"), mode, fmt);
+      return writef(file, inform::TAUTOLOGY, mode, fmt);
    }
 
    //does not respect width parameters

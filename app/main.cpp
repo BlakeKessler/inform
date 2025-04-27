@@ -13,11 +13,6 @@
    #include <ctime>
 #endif
 
-mcsl::str_slice inform::NOT = mcsl::FMT("¬");
-mcsl::str_slice inform::OR = mcsl::FMT("⋁");
-mcsl::str_slice inform::AND = mcsl::FMT("⋀");
-mcsl::str_slice inform::IMPLIES = mcsl::FMT("→");
-
 //parameter default values
 uint proofsToGen = 1; //-n=[0-9]+
 uint premsPerProof = 2; //-p=[0-9]+
@@ -55,6 +50,8 @@ bool parseInputs(int argc, char** argv) {
          inform::OR = mcsl::FMT("|");
          inform::AND = mcsl::FMT("&");
          inform::IMPLIES = mcsl::FMT("$");
+         inform::CONTRADICTION = mcsl::FMT("^");
+         inform::TAUTOLOGY = mcsl::FMT("T");
          continue;
       }
       if (arg.size() < 4) {

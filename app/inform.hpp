@@ -14,6 +14,8 @@ namespace inform {
    extern mcsl::str_slice OR;
    extern mcsl::str_slice AND;
    extern mcsl::str_slice IMPLIES;
+   extern mcsl::str_slice CONTRADICTION;
+   extern mcsl::str_slice TAUTOLOGY;
 };
 
 #endif
