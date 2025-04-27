@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
       auto tmp = inform::PremiseSet(premsPerProof, termCount, maxVars, sparsity, allowContConc);
       out->printf(mcsl::FMT("============\n%s"), tmp);
    }
-   mcsl::printf(mcsl::FMT("============\n"));
+   out->printf(mcsl::FMT("============\n"));
 
    if (outPath.size()) {
       delete out;
