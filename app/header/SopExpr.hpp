@@ -14,8 +14,6 @@ class inform::SopExpr {
       //!TODO: maybe add a _baseTerm? maybe make a tree-like structure?
       mcsl::dyn_arr<ProdTerm> _terms;
 
-      static double _noSimplifyProb;
-
       SopExpr(const SopExpr& lhs, const SopExpr& rhs); //AND implementation constructor
    public:
       SopExpr():_terms{} {}
@@ -23,7 +21,8 @@ class inform::SopExpr {
       SopExpr(SopExpr&& other):_terms(std::move(other._terms)) {}
       SopExpr(const SopExpr& other):_terms(other._terms) {}
 
-      SopExpr(uint termCount, uint maxVars, uint sparsity, double noSimplifyProb);
+      SopExpr(uint termCount);
+      SopExpr(uint termCount, uint maxVars, uint sparsity);
       
       SopExpr move() { return std::move(self); }
       SopExpr copy() const { return self; }
@@ -31,7 +30,7 @@ class inform::SopExpr {
       SopExpr& operator=(SopExpr&& other) = default;
       SopExpr& operator=(const SopExpr& other) = default;
 
-      SopExpr& normalize(double noSimplifyProb = _noSimplifyProb);
+      SopExpr& normalize();
 
       SopExpr& operator|=(const ProdTerm& term);
       SopExpr& operator|=(const SopExpr& other);

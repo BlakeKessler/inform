@@ -15,7 +15,8 @@ class inform::PremiseSet {
       PremiseSet(const mcsl::arr_span<SopExpr> exprs);
       PremiseSet(PremiseSet&&);
       PremiseSet(const PremiseSet&);
-      PremiseSet(uint premsPerProof, uint termCount, uint maxVars, uint sparsity, double noReduceProb);
+      PremiseSet(uint premsPerProof, uint termCount);
+      PremiseSet(uint premsPerProof, uint termCount, uint maxVars, uint sparsity);
       PremiseSet move() { return std::move(self); }
       PremiseSet copy() const { return self; }
 

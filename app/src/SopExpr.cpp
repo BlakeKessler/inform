@@ -4,13 +4,48 @@
 #include "SopExpr.hpp"
 
 #include "io.hpp"
-#include "rand.hpp"
-
-double inform::SopExpr::_noSimplifyProb = 0.0;
 
 //!generate a random sum-of-products expression
-inform::SopExpr::SopExpr(uint termCount, uint maxVars, uint sparsity, double noSimplifyProb) {
-   SopExpr::_noSimplifyProb = noSimplifyProb;
+inform::SopExpr::SopExpr(uint termCount) {
+   while (_terms.size() < termCount) {
+      const ProdTerm newTerm = ProdTerm::makeRand();
+
+      //filter out contradictions and tautologies
+      if (newTerm.isContradiction() || newTerm.isTautology()) {
+         continue;
+      }
+      
+      //find the location for the new term
+      for (uint i = 0; i < _terms.size(); ++i) {
+         if (newTerm.implies(_terms[i])) { //new term implies term i, so it can replace it
+            _terms[i] = newTerm;
+
+            //remove redundant terms
+            ++i;
+            while (i < _terms.size()) {
+               if (newTerm.implies(_terms[i])) { //new term implies term i, so it can be removed
+                  //move back term over term i
+                  _terms[i] = _terms.back();
+                  _terms.pop_back();
+
+                  if (i == _terms.size()) { [[unlikely]]; //break out of for loop and skip pushing the new node (since it has already overwritten a redundant term)
+                     goto AFTER_FINALLY;
+                  }
+                  //skip increment
+                  continue;
+               }
+               ++i;
+            }
+         }
+      }
+      // finally {
+      _terms.push_back(newTerm);
+      // }
+      AFTER_FINALLY:
+   }
+   normalize();
+}
+inform::SopExpr::SopExpr(uint termCount, uint maxVars, uint sparsity) {
    while (_terms.size() < termCount) {
       const ProdTerm newTerm = ProdTerm::makeRand(maxVars, sparsity);
 
@@ -51,15 +86,10 @@ inform::SopExpr::SopExpr(uint termCount, uint maxVars, uint sparsity, double noS
 }
 
 //!remove redundant terms
-inform::SopExpr& inform::SopExpr::normalize(double noSimplifyProb) { //!TODO: maybe make this a private method
+inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a private method
    for (uint i = 1; i < _terms.size(); ++i) {
       auto termI = _terms[i];
       for (uint j = 0; j < i;) {
-         if (mcsl::randp() < noSimplifyProb) {
-            // ++j;
-            // continue;
-         }
-
          auto termJ = _terms[j];
          if (termI.implies(termJ)) {
             if (i < _terms.size()) {
