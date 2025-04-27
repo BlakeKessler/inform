@@ -12,22 +12,27 @@
    #include <ctime>
 #endif
 
-int main(int argc, char** argv) {
-   #ifndef NDEBUG
-   mcsl::srand(std::time(nullptr));
-   #endif
+//parameter default values
+uint proofsToGen = 1; //-n=[0-9]+
+uint premsPerProof = 2; //-p=[0-9]+
+uint termCount = 2; //-t=[0-9]+
+uint maxVars = 2; //-v=[0-9]+
+uint sparsity = 0; //-s=[0-9]+
+bool allowContConc = false; //-C
+mcsl::str_slice outPath{}; //-o=[^ ]+
+mcsl::str_slice inPath{}; //[^-/ ][^ ]+
 
-   //parameter default values
-   uint proofsToGen = 1; //-n=[0-9]+
-   uint premsPerProof = 2; //-p=[0-9]+
-   uint termCount = 2; //-t=[0-9]+
-   uint maxVars = 2; //-v=[0-9]+
-   uint sparsity = 0; //-s=[0-9]+
-   bool allowContConc = false; //-C
-   mcsl::str_slice outPath{}; //-o=[^ ]+
-   mcsl::str_slice inPath{}; //[^-/ ][^ ]+
+//generate the proofs
+void genProofs(mcsl::File& out) {
+   for (uint i = 0; i < proofsToGen; ++i) {
+      auto tmp = inform::PremiseSet(premsPerProof, termCount, maxVars, sparsity, allowContConc);
+      out.printf(mcsl::FMT("============\n%s"), tmp);
+   }
+   out.printf(mcsl::FMT("============\n"));
+}
 
-   //parse inputs
+//parse inputs
+bool parseInputs(int argc, char** argv) {
    bool badParam = false;
    for (int i = 1; i < argc; ++i) {
       mcsl::str_slice arg = FMT(argv[i]);
@@ -65,17 +70,38 @@ int main(int argc, char** argv) {
          mcsl::err_printf(FMT("\033[1;31mERROR:\033[22;39m unrecognized flag: %s\n"), arg);
       }
    }
-   //validate paramters
+   return badParam;
+}
+
+//validate parameters
+bool checkParams() {
+   bool badParam = false;
    if (maxVars > (8 * sizeof(uint))) {
       badParam = true;
       mcsl::err_printf(FMT("\033[1;31mERROR:\033[22;39m variable limit exceeded (%i > %i)\n"), maxVars, 8 * sizeof(uint));
    }
-
-   //abort if there are invalid parameters
+   if (termCount > maxVars) {
+      badParam = true;
+      mcsl::err_printf(FMT("\033[1;31mERROR:\033[22;39m may not have more terms than variables (%i > %i)\n"), termCount, maxVars);
+   }
    if (inPath.size()) {
       mcsl::err_printf(FMT("\033[1;31mERROR:\033[22;39m batch input files are not yet supported\n"));
       badParam = true;
    }
+   return badParam;
+}
+
+//main
+int main(int argc, char** argv) {
+   #ifndef NDEBUG
+   mcsl::srand(std::time(nullptr));
+   #endif
+
+   //parse inputs
+   bool badParam = parseInputs(argc, argv);
+   badParam |= checkParams();
+
+   //abort if there are invalid parameters
    if (badParam) {
       mcsl::err_printf(FMT("\033[1;31mABORTING\033[22;39m\n"));
       return EXIT_FAILURE;
@@ -89,16 +115,14 @@ int main(int argc, char** argv) {
       out = &mcsl::stdout;
    }
 
-   //generate the proofs
-   for (uint i = 0; i < proofsToGen; ++i) {
-      auto tmp = inform::PremiseSet(premsPerProof, termCount, maxVars, sparsity, allowContConc);
-      out->printf(mcsl::FMT("============\n%s"), tmp);
-   }
-   out->printf(mcsl::FMT("============\n"));
+   //generate proofs
+   genProofs(*out);
 
+   //close output file
    if (outPath.size()) {
       delete out;
    }
+
    return EXIT_SUCCESS;
 }
 
