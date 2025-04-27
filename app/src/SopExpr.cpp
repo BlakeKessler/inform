@@ -275,7 +275,7 @@ uint mcsl::writef(File& file, const inform::SopExpr& obj, char mode, FmtArgs fmt
 
    charsPrinted += file.printf(FMT("(%s)"), *it);
    while (++it < end) {
-      charsPrinted += file.printf(FMT(" ⋁ (%s)"), *it);
+      charsPrinted += file.printf(FMT(" %s (%s)"), inform::OR, *it);
    }
 
    return charsPrinted;

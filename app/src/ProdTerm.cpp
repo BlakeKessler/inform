@@ -99,11 +99,11 @@ uint mcsl::writef(File& file, const inform::ProdTerm& obj, char mode, FmtArgs fm
       if (firstTerm) {
          firstTerm = false;
       } else {
-         charsPrinted += file.printf(FMT(" ⋀ "));
+         charsPrinted += file.printf(FMT(" %s "), inform::AND);
       }
 
       if (status == inform::ProdTerm::FALSE) {
-         charsPrinted += file.printf(FMT("¬"));
+         charsPrinted += file.printf(FMT("%s"), inform::NOT);
       }
       charsPrinted += file.printf(FMT("x%u"), i);
    }

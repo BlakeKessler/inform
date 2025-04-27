@@ -61,7 +61,7 @@ uint mcsl::writef(File& file, const inform::PremiseSet& obj, char mode, FmtArgs 
       charsPrinted += file.printf(FMT("%s\n"), *it);
    }
 
-   charsPrinted += file.printf(FMT("⇒ %s\n"), obj.conclusion());
+   charsPrinted += file.printf(FMT("%s %s\n"), inform::IMPLIES, obj.conclusion());
 
    return charsPrinted;
 }

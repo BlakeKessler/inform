@@ -1,6 +1,7 @@
 #ifndef MAIN_CPP
 #define MAIN_CPP
 
+#include "inform.hpp"
 #include "PremiseSet.hpp"
 
 #include "str_to_num.hpp"
@@ -11,6 +12,11 @@
 #ifndef NDEBUG
    #include <ctime>
 #endif
+
+mcsl::str_slice inform::NOT = mcsl::FMT("¬");
+mcsl::str_slice inform::OR = mcsl::FMT("⋁");
+mcsl::str_slice inform::AND = mcsl::FMT("⋀");
+mcsl::str_slice inform::IMPLIES = mcsl::FMT("→");
 
 //parameter default values
 uint proofsToGen = 1; //-n=[0-9]+
@@ -42,6 +48,13 @@ bool parseInputs(int argc, char** argv) {
       
       if (arg.size() == 2 && arg[1] == 'C') {
          allowContConc = true;
+         continue;
+      }
+      if (arg.size() == 2 && arg[1] == 'A') {
+         inform::NOT = mcsl::FMT("~");
+         inform::OR = mcsl::FMT("|");
+         inform::AND = mcsl::FMT("&");
+         inform::IMPLIES = mcsl::FMT("$");
          continue;
       }
       if (arg.size() < 4) {
@@ -102,6 +115,7 @@ void help(mcsl::str_slice exePath) {
    mcsl::printf(FMT("\033[4m-s\033[24m: the chance to skip an individual step in simplification\n"));
    mcsl::printf(FMT("\033[4m-C\033[24m: prevents generation of proofs of the contradiction literal when present\n"));
    mcsl::printf(FMT("\033[4m-o\033[24m: the path to the output file (defaults to stdout)\n"));
+   mcsl::printf(FMT("\033[4m-A\033[24m: print output with ASCII encoding instead of using unicode characters when present\n"));
    mcsl::printf(FMT("\033[4m-h\033[24m or \033[4m--help\033[24m: print this menu if it is the only flag, throws an error otherwise\n"));
 
    mcsl::printf(FMT("\n\033[1mEXAMPLE:\033[22m \033[4m%s -n=1 -p=2 -t=3 -v=4 -s=5 -C -o=RESULTS.txt\033[24m\n"), exePath);
@@ -109,7 +123,7 @@ void help(mcsl::str_slice exePath) {
    mcsl::printf(FMT("\033[1mEXAMPLE:\033[22m \033[4m%s -n=1 -p=2 -t=2 -v=2 -s=0\033[24m\n"), exePath);
    mcsl::printf(FMT("the default parameters\n"));
 
-   mcsl::printf(FMT("\nAny parameters not specified when running the program will use their default values.\n"));
+   mcsl::printf(FMT("\nAny parameters not specified when running the program will use their default values.\nFlags may be passed in any order.\n"));
 }
 
 //main
