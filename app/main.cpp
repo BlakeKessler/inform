@@ -91,6 +91,27 @@ bool checkParams() {
    return badParam;
 }
 
+//print help page
+void help(mcsl::str_slice exePath) {
+   mcsl::printf(FMT("\033[1mFLAGS:\033[22m\n"));
+
+   mcsl::printf(FMT("\033[4m-n\033[24m: the number of proofs to generate\n"));
+   mcsl::printf(FMT("\033[4m-p\033[24m: the number of premises in the proofs\n"));
+   mcsl::printf(FMT("\033[4m-t\033[24m: the number of terms in each premise\n"));
+   mcsl::printf(FMT("\033[4m-v\033[24m: the number of variables\n"));
+   mcsl::printf(FMT("\033[4m-s\033[24m: the chance to skip an individual step in simplification\n"));
+   mcsl::printf(FMT("\033[4m-C\033[24m: prevents generation of proofs of the contradiction literal when present\n"));
+   mcsl::printf(FMT("\033[4m-o\033[24m: the path to the output file (defaults to stdout)\n"));
+   mcsl::printf(FMT("\033[4m-h\033[24m or \033[4m--help\033[24m: print this menu if it is the only flag, throws an error otherwise\n"));
+
+   mcsl::printf(FMT("\n\033[1mEXAMPLE:\033[22m \033[4m%s -n=1 -p=2 -t=3 -v=4 -s=5 -C -o=RESULTS.txt\033[24m\n"), exePath);
+   mcsl::printf(FMT("generates 1 proof that will not have contradiction as a conclusion, with 2 premises, each with 3 terms, the set of variables used in the proof being {x0, x1, x2, x3}, having a 5%% chance to undersimplify at each step, and prints the results to the file \'RESULTS.txt\' (overwriting the previous contents of that file if it already exists)\n"));
+   mcsl::printf(FMT("\033[1mEXAMPLE:\033[22m \033[4m%s -n=1 -p=2 -t=2 -v=2 -s=0\033[24m\n"), exePath);
+   mcsl::printf(FMT("the default parameters\n"));
+
+   mcsl::printf(FMT("\nAny parameters not specified when running the program will use their default values.\n"));
+}
+
 //main
 int main(int argc, char** argv) {
    #ifndef NDEBUG
@@ -98,6 +119,10 @@ int main(int argc, char** argv) {
    #endif
 
    //parse inputs
+   if (argc == 1 || (argc == 2 && (FMT(argv[1]) == FMT("-h") || FMT(argv[1]) == FMT("--help")))) {
+      help(FMT(argv[0]));
+      return EXIT_SUCCESS;
+   }
    bool badParam = parseInputs(argc, argv);
    badParam |= checkParams();
 
