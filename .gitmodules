@@ -1,3 +1,4 @@
 [submodule "mcsl"]
 	path = mcsl
 	url = git@github.com:BlakeKessler/mcsl.git
+	branch = cpp
