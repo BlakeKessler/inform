@@ -22,7 +22,6 @@ struct alignas(uint64) inform::ProdTerm {
       static ProdTerm make(uint32 vars = 0, uint32 mask = 0) { return {mask ? vars & mask : vars, mask}; }
       static ProdTerm makeContradiction() { return {~0u, 0}; }
       static ProdTerm makeTautology() { return {0, 0}; }
-      static ProdTerm makeRand();
       static ProdTerm makeRand(uint maxVars, uint sparsity);
       ProdTerm copy() const { return self; }
 

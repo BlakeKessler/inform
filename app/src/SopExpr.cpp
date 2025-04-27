@@ -6,45 +6,6 @@
 #include "io.hpp"
 
 //!generate a random sum-of-products expression
-inform::SopExpr::SopExpr(uint termCount) {
-   while (_terms.size() < termCount) {
-      const ProdTerm newTerm = ProdTerm::makeRand();
-
-      //filter out contradictions and tautologies
-      if (newTerm.isContradiction() || newTerm.isTautology()) {
-         continue;
-      }
-      
-      //find the location for the new term
-      for (uint i = 0; i < _terms.size(); ++i) {
-         if (newTerm.implies(_terms[i])) { //new term implies term i, so it can replace it
-            _terms[i] = newTerm;
-
-            //remove redundant terms
-            ++i;
-            while (i < _terms.size()) {
-               if (newTerm.implies(_terms[i])) { //new term implies term i, so it can be removed
-                  //move back term over term i
-                  _terms[i] = _terms.back();
-                  _terms.pop_back();
-
-                  if (i == _terms.size()) { [[unlikely]]; //break out of for loop and skip pushing the new node (since it has already overwritten a redundant term)
-                     goto AFTER_FINALLY;
-                  }
-                  //skip increment
-                  continue;
-               }
-               ++i;
-            }
-         }
-      }
-      // finally {
-      _terms.push_back(newTerm);
-      // }
-      AFTER_FINALLY:
-   }
-   normalize();
-}
 inform::SopExpr::SopExpr(uint termCount, uint maxVars, uint sparsity) {
    while (_terms.size() < termCount) {
       const ProdTerm newTerm = ProdTerm::makeRand(maxVars, sparsity);
@@ -82,13 +43,19 @@ inform::SopExpr::SopExpr(uint termCount, uint maxVars, uint sparsity) {
       // }
       AFTER_FINALLY:
    }
+
    normalize();
+   if (isTautology() || isContradiction()) { //restart if a tautology or contradiction is generated
+      std::destroy_at(this);
+      new (this) SopExpr(termCount, maxVars, sparsity);
+   }
 }
 
 //!remove redundant terms
 inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a private method
-   for (uint i = 1; i < _terms.size(); ++i) {
+   for (uint i = 1; i < _terms.size();) {
       auto termI = _terms[i];
+
       for (uint j = 0; j < i;) {
          auto termJ = _terms[j];
          if (termI.implies(termJ)) {
@@ -144,18 +111,43 @@ inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a priva
          _terms[j] = termJ;
          //move back term over term i
          if (i == _terms.size()) { [[unlikely]];
-            return self;
+            goto RETURN;
          }
          termI = _terms.back();
          _terms[i] = termI;
          _terms.pop_back();
          if (i == _terms.size()) { [[unlikely]];
-            return self;
+            goto RETURN;
          }
          //ensure that the new term i (former back item) is checked
          j = 0;
          continue;
       }
+      
+      ++i;
+   }
+
+   RETURN:
+   if (!_terms.size()) {
+      _terms.push_back(ProdTerm::makeTautology());
+      return self;
+   }
+   for (uint i = 0; i < _terms.size();) { //filter out tautologies
+      auto termI = _terms[i];
+      if (termI.isContradiction()) { //skip contradictions
+         _terms[i] = _terms.back();
+         _terms.pop_back();
+         continue;
+      }
+      if (termI.isTautology()) { //handle tautologies
+         std::destroy_at(&_terms);
+         _terms = {ProdTerm::makeTautology()};
+         return self;
+      }
+      ++i;
+   }
+   if (!_terms.size()) {
+      _terms.push_back(ProdTerm::makeContradiction());
    }
    return self;
 }
@@ -251,6 +243,13 @@ inform::SopExpr::SopExpr(const SopExpr& lhs, const SopExpr& rhs) {
       //    _terms.push_back(ProdTerm::makeContradiction());
       // }
    }
+}
+
+bool inform::SopExpr::isContradiction() const {
+   return _terms.size() == 1 && _terms[0].isContradiction();
+}
+bool inform::SopExpr::isTautology() const {
+   return _terms.size() == 1 && _terms[0].isTautology();
 }
 
 
