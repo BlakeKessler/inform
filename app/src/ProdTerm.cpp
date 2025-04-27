@@ -72,7 +72,11 @@ bool inform::ProdTerm::operator==(const ProdTerm& other) const {
    return _mask == other._mask && _vals == other._vals;
 }
 
+//!NOTE: not FOL-implies (would require special cases for contradictions and tautologies, and would break things)
 bool inform::ProdTerm::implies(const ProdTerm& other) const {
+   // if (isContradiction()) { return true; }
+   // if (other.isContradiction()) { return false; } //implicity includes !isContradiction()
+   // if (other.isTautology()) { return true; }
    return ((other._mask & _mask) == other._mask) && (_vals & other._mask) == (other._vals & other._mask);
 }
 

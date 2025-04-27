@@ -43,7 +43,7 @@ struct alignas(uint64) inform::ProdTerm {
       bool isTautology() const;
 
       bool operator==(const ProdTerm& other) const;
-      bool implies(const ProdTerm& other) const;
+      bool implies(const ProdTerm& other) const; //maybe switch to `operator>` or `moreSpecific` to allow implies to be FOL-implies
 
 };
 
