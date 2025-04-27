@@ -141,7 +141,7 @@ inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a priva
       }
       if (termI.isTautology()) { //handle tautologies
          std::destroy_at(&_terms);
-         _terms = {ProdTerm::makeTautology()};
+         new (&_terms) mcsl::dyn_arr<ProdTerm>{ProdTerm::makeTautology()};
          return self;
       }
       ++i;

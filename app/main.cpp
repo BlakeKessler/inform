@@ -18,9 +18,10 @@ int main(int argc, char** argv) {
    uint termCount = mcsl::str_to_uint(argv[3], std::strlen(argv[3]));
    uint maxVars = mcsl::str_to_uint(argv[4], std::strlen(argv[4]));
    uint sparsity = mcsl::str_to_uint(argv[5], std::strlen(argv[5]));
+   bool allowContConc = argc > 6 && (std::strcmp(argv[6], "-C") == 0 || std::strcmp(argv[6], "--Contradictary-conclusions") == 0);
 
    for (uint i = 0; i < proofsToGen; ++i) {
-      auto tmp = inform::PremiseSet(premsPerProof, termCount, maxVars, sparsity);
+      auto tmp = inform::PremiseSet(premsPerProof, termCount, maxVars, sparsity, allowContConc);
       mcsl::printf(mcsl::FMT("============\n%s============\n"), tmp);
    }
 }

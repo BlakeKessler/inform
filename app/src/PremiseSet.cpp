@@ -25,10 +25,15 @@ inform::PremiseSet::PremiseSet(const PremiseSet& other):
       
 }
 
-inform::PremiseSet::PremiseSet(uint premsPerProof, uint termCount, uint maxVars, uint sparsity):
+inform::PremiseSet::PremiseSet(uint premsPerProof, uint termCount, uint maxVars, uint sparsity, bool allowContConc):
    _exprs(premsPerProof),_conclusion() {
       for (uint i = 0; i < premsPerProof; ++i) {
          _conclusion &= *new (_exprs + i) SopExpr(termCount, maxVars, sparsity);
+      }
+
+      if (!allowContConc && _conclusion.isContradiction()) {
+         std::destroy_at(this);
+         new (this) PremiseSet(premsPerProof, termCount, maxVars, sparsity, allowContConc);
       }
 }
 
