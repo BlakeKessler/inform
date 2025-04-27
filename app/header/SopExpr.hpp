@@ -21,7 +21,6 @@ class inform::SopExpr {
       SopExpr(SopExpr&& other):_terms(std::move(other._terms)) {}
       SopExpr(const SopExpr& other):_terms(other._terms) {}
 
-      SopExpr(uint termCount);
       SopExpr(uint termCount, uint maxVars, uint sparsity);
       
       SopExpr move() { return std::move(self); }
@@ -46,6 +45,9 @@ class inform::SopExpr {
       ProdTerm* end() { return _terms.end(); }
       const ProdTerm* begin() const { return _terms.begin(); }
       const ProdTerm* end() const { return _terms.end(); }
+
+      bool isContradiction() const;
+      bool isTautology() const;
 };
 
 namespace mcsl {

@@ -42,6 +42,9 @@ $(ALL_OBJ_FILES): _build/%.o : %.cpp
 objects: $(ALL_OBJ_FILES)
 
 #compile unit test files
-.PHONY: Main
-Main: app/main.cpp | $(ALL_OBJ_FILES)
-	$(COMPILE) $(shell find _build | grep "\.o$$") -o _build/out/$@.out
+.PHONY: debug
+debug: app/main.cpp | $(ALL_OBJ_FILES)
+	$(COMPILE) $(shell find _build | grep "\.o$$") -o _build/out/inform.out
+.PHONY: release
+release: app/main.cpp | $(ALL_OBJ_FILES)
+	$(COMPILE) -DNDEBUG $(shell find _build | grep "\.o$$") -o _build/out/inform
