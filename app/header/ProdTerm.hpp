@@ -28,6 +28,9 @@ struct alignas(uint64) inform::ProdTerm {
       uint32 vals() const { return _vals; }
       uint32 mask() const { return _mask; }
 
+      uint32 trueMask() const { return _vals & _mask; }
+      uint32 falseMask() const { return (~_vals) & _mask; }
+
       uint64 toInt() const { return std::bit_cast<uint64>(self); }
       uint64 toUint() const { return std::bit_cast<uint64>(self); }
       sint64 toSint() const { return std::bit_cast<sint64>(self); }
@@ -42,7 +45,7 @@ struct alignas(uint64) inform::ProdTerm {
       bool isTautology() const;
 
       bool operator==(const ProdTerm& other) const;
-      bool implies(const ProdTerm& other) const;
+      bool subsumes(const ProdTerm& other) const;
 
 };
 

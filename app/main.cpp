@@ -125,7 +125,7 @@ void help(mcsl::str_slice exePath) {
 
 //main
 int main(int argc, char** argv) {
-   #ifndef NDEBUG
+   #ifdef NDEBUG
    mcsl::srand(std::time(nullptr));
    #endif
 

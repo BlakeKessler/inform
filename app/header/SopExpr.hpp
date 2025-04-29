@@ -15,6 +15,12 @@ class inform::SopExpr {
       mcsl::dyn_arr<ProdTerm> _terms;
 
       SopExpr(const SopExpr& lhs, const SopExpr& rhs); //AND implementation constructor
+
+      SopExpr& normalize();
+      uint normalizedPush(ProdTerm term, uint index);
+      uint normalizedPushBack(ProdTerm term);
+      void pop(uint index);
+      void swap(uint lhs, uint rhs);
    public:
       SopExpr():_terms{} {}
       SopExpr(mcsl::arr_span<ProdTerm> terms):_terms{terms} {}
@@ -28,8 +34,6 @@ class inform::SopExpr {
       
       SopExpr& operator=(SopExpr&& other) = default;
       SopExpr& operator=(const SopExpr& other) = default;
-
-      SopExpr& normalize();
 
       SopExpr& operator|=(const ProdTerm& term);
       SopExpr& operator|=(const SopExpr& other);

@@ -64,7 +64,7 @@ bool inform::ProdTerm::operator==(const ProdTerm& other) const {
    return _mask == other._mask && _vals == other._vals;
 }
 
-bool inform::ProdTerm::implies(const ProdTerm& other) const {
+bool inform::ProdTerm::subsumes(const ProdTerm& other) const {
    return ((other._mask & _mask) == other._mask) && (_vals & other._mask) == (other._vals & other._mask);
 }
 

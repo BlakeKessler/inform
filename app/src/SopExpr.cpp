@@ -16,136 +16,111 @@ inform::SopExpr::SopExpr(uint termCount, uint maxVars, uint sparsity) {
       }
       
       //find the location for the new term
-      for (uint i = 0; i < _terms.size(); ++i) {
-         if (newTerm.implies(_terms[i])) { //new term implies term i, so it can replace it
-            _terms[i] = newTerm;
-
-            //remove redundant terms
-            ++i;
-            while (i < _terms.size()) {
-               if (newTerm.implies(_terms[i])) { //new term implies term i, so it can be removed
-                  //move back term over term i
-                  _terms[i] = _terms.back();
-                  _terms.pop_back();
-
-                  if (i == _terms.size()) { [[unlikely]]; //break out of for loop and skip pushing the new node (since it has already overwritten a redundant term)
-                     goto AFTER_FINALLY;
-                  }
-                  //skip increment
-                  continue;
-               }
-               ++i;
-            }
-         }
-      }
-      // finally {
-      _terms.push_back(newTerm);
-      // }
-      AFTER_FINALLY:
+      normalizedPushBack(newTerm);
    }
 
-   normalize();
+   // normalize();
    if (isTautology() || isContradiction()) { //restart if a tautology or contradiction is generated
       std::destroy_at(this);
       new (this) SopExpr(termCount, maxVars, sparsity);
    }
 }
 
+void inform::SopExpr::pop(uint index) {
+   assume(index < _terms.size());
+   ProdTerm tmp = _terms.pop_back();
+   if (index < _terms.size()) {
+      _terms[index] = tmp;
+   }
+}
+void inform::SopExpr::swap(uint lhs, uint rhs) {
+   assume(lhs < _terms.size());
+   assume(rhs < _terms.size());
+   ProdTerm tmp = _terms[lhs];
+   _terms[lhs] = _terms[rhs];
+   _terms[rhs] = tmp;
+}
+
+//!NOTE: discards _terms[index]
+uint inform::SopExpr::normalizedPush(ProdTerm term, uint index) {
+   assume(index < _terms.size());
+   _terms[index] = term;
+   uint maskPopcount = std::popcount(term.mask());
+   bool poppedTerm = false;
+   for (uint j = 0; j < index; ++j) {
+      ProdTerm termJ = _terms[j];
+      uint maskPopcountJ = std::popcount(termJ.mask());
+
+      const uint maskDiffMask = term.mask() ^ termJ.mask();
+      const uint conflictMask = ((term.trueMask() & termJ.falseMask()) | (term.falseMask() & termJ.trueMask())) & (term.mask() | termJ.mask());
+      
+      const uint maskDiffPopcount = std::popcount(maskDiffMask);
+      const uint conflictPopcount = std::popcount(conflictMask);
+
+      // AX + !AX = X
+      if (conflictPopcount == 1 && maskPopcount == maskPopcountJ) {
+         ProdTerm newTerm = ProdTerm::make(term.vals(), term.mask() & ~conflictMask);
+         if (!poppedTerm) {
+            pop(index);
+            --index;
+         }
+         poppedTerm = true;
+         swap(j, index);
+         normalizedPush(newTerm, index);
+         // continue;
+         // break;
+      }
+      // A + !AX = A + X
+      else if (conflictPopcount == 2 && maskDiffPopcount == 1) { //this condition is not right
+         ProdTerm newTerm = ProdTerm::make(termJ.vals(), termJ.mask() & ~(maskDiffMask ^ conflictMask));
+         // if (!poppedTerm) {
+            pop(index);
+            --index;
+         // }
+         poppedTerm = true;
+         swap(j, index);
+         normalizedPush(newTerm, index);
+         // continue;
+         // break;
+      }
+      // A + AX = A
+      else if (termJ.subsumes(term)) {
+         // if (!poppedTerm) {
+            pop(index);
+            --index;
+         // }
+         poppedTerm = true;
+         // continue;
+         // break;
+      } 
+      // AX + A = A
+      else if (term.subsumes(termJ)) {
+         // if (!poppedTerm) {
+            swap(j, index);
+            pop(index);
+            --index;
+         // }
+         poppedTerm = true;
+         // normalizedPush(term, index);
+         // continue;
+         // break;
+      }
+   }
+   return index;
+}
+uint inform::SopExpr::normalizedPushBack(ProdTerm term) {
+   uint index = _terms.size();
+   _terms.push_back(ProdTerm::makeContradiction());
+   return normalizedPush(term, index);
+}
+
 //!remove redundant terms
 inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a private method
    for (uint i = 1; i < _terms.size();) {
-      auto termI = _terms[i];
-
-      for (uint j = 0; j < i;) {
-         auto termJ = _terms[j];
-         if (termI.implies(termJ)) {
-            if (i < _terms.size()) {
-               _terms[j] = _terms.pop_back();
-               continue;
-            } else {
-               _terms.pop_back();
-               break;
-            }
-         }
-
-         uint overlapMask = ~(termI.mask() ^ termJ.mask());
-         if (!overlapMask) {
-            ++j;
-            continue;
-         }
-         uint diffMask = (termI.vals() & termI.mask()) ^ (termJ.vals() & termJ.mask());
-         uint conflictMask = overlapMask & diffMask;
-         ProdTerm newJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~diffMask);
-
-         if (!termJ.implies(termI)) {
-            if (std::popcount(diffMask) != 1 || newJ != ProdTerm::make(termI.vals(), termI.mask() & ~diffMask)) {
-               if (std::popcount(overlapMask) == 1) { //masks overlap in only one place and the values at that place are different (anything else would be filtered out by the implies check)
-                  newJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~overlapMask);
-               }
-               else {
-                  ProdTerm noConflictJ = ProdTerm::make(termJ.vals(), termJ.mask() & ~conflictMask);
-                  ProdTerm noConflictI = ProdTerm::make(termI.vals(), termI.mask() & ~conflictMask);
-                  if (std::popcount(conflictMask) == 1) {
-                     if (noConflictI == noConflictJ) {
-                        newJ = noConflictJ;
-                        goto JANK_LABEL;
-                     }
-                     else if (noConflictJ.implies(noConflictI)) {
-                        //BC + !A!BC == BC + !AC
-                        //termI unchanged, remove conflict term from termJ
-                        termJ = noConflictJ;
-                        _terms[j] = termJ;
-                     } else if (noConflictI.implies(noConflictJ)) {
-                        termI = noConflictI;
-                        _terms[i] = termI;
-                     }
-                  }
-                  ++j;
-                  continue;
-                  JANK_LABEL:
-               }
-            }
-         }
-         //write new term j
-         termJ = newJ;
-         _terms[j] = termJ;
-         //move back term over term i
-         if (i == _terms.size()) { [[unlikely]];
-            goto RETURN;
-         }
-         termI = _terms.back();
-         _terms[i] = termI;
-         _terms.pop_back();
-         if (i == _terms.size()) { [[unlikely]];
-            goto RETURN;
-         }
-         //ensure that the new term i (former back item) is checked
-         j = 0;
-         continue;
-      }
-      
-      ++i;
+      ProdTerm termI = _terms[i];
+      i = normalizedPush(termI, i) + 1;
    }
-
-   RETURN:
-   if (!_terms.size()) {
-      _terms.push_back(ProdTerm::makeTautology());
-      return self;
-   }
-   for (uint i = 0; i < _terms.size();) { //filter out tautologies
-      auto termI = _terms[i];
-      if (termI.isContradiction()) { //skip contradictions
-         _terms[i] = _terms.back();
-         _terms.pop_back();
-         continue;
-      }
-      if (termI.isTautology()) { //handle tautologies
-         std::destroy_at(&_terms);
-         new (&_terms) mcsl::dyn_arr<ProdTerm>{ProdTerm::makeTautology()};
-         return self;
-      }
-      ++i;
-   }
+   
    if (!_terms.size()) {
       _terms.push_back(ProdTerm::makeContradiction());
    }
@@ -174,8 +149,7 @@ inform::SopExpr& inform::SopExpr::operator&=(const ProdTerm& term) {
       _terms[i] &= term;
       if (_terms[i].isContradiction()) {
          //move back term over term i
-         _terms[i] = _terms.back();
-         _terms.pop_back();
+         pop(i);
          //ensure the new term i (former back item) is checked
          continue;
       }

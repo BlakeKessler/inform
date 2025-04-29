@@ -13,7 +13,6 @@ inform::PremiseSet::PremiseSet(const mcsl::arr_span<SopExpr> exprs):
          for (uint i = 1; i < _exprs.size(); ++i) {
             _conclusion &= _exprs[i];
          }
-         _conclusion.normalize();
       }
 }
 inform::PremiseSet::PremiseSet(PremiseSet&& other):
