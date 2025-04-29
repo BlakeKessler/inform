@@ -30,7 +30,7 @@ inform::ProdTerm::Status inform::ProdTerm::operator[](ubyte i) const {
 }
 
 inform::ProdTerm& inform::ProdTerm::operator&=(const ProdTerm& other) {
-   if (isContradiction()) {
+   if (isContradiction() || other.isTautology()) {
       return self;
    }
    if (other.isContradiction()) {
@@ -61,11 +61,11 @@ bool inform::ProdTerm::isTautology() const {
 }
 
 bool inform::ProdTerm::operator==(const ProdTerm& other) const {
-   return _mask == other._mask && _vals == other._vals;
+   return trueMask() == other.trueMask() && falseMask() == other.falseMask();
 }
 
 bool inform::ProdTerm::subsumes(const ProdTerm& other) const {
-   return ((other._mask & _mask) == other._mask) && (_vals & other._mask) == (other._vals & other._mask);
+   return (self & other) == other;
 }
 
 

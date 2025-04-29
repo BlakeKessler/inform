@@ -45,68 +45,26 @@ void inform::SopExpr::swap(uint lhs, uint rhs) {
 uint inform::SopExpr::normalizedPush(ProdTerm term, uint index) {
    assume(index < _terms.size());
    _terms[index] = term;
+   
    uint maskPopcount = std::popcount(term.mask());
    bool poppedTerm = false;
    for (uint j = 0; j < index; ++j) {
       ProdTerm termJ = _terms[j];
-      uint maskPopcountJ = std::popcount(termJ.mask());
+      // uint maskPopcountJ = std::popcount(termJ.mask());
 
-      const uint maskDiffMask = term.mask() ^ termJ.mask();
-      const uint conflictMask = ((term.trueMask() & termJ.falseMask()) | (term.falseMask() & termJ.trueMask())) & (term.mask() | termJ.mask());
+      // const uint maskDiffMask = term.mask() ^ termJ.mask();
+      // const uint conflictMask = ((term.trueMask() & termJ.falseMask()) | (term.falseMask() & termJ.trueMask())) & (term.mask() | termJ.mask());
       
-      const uint maskDiffPopcount = std::popcount(maskDiffMask);
-      const uint conflictPopcount = std::popcount(conflictMask);
+      // const uint maskDiffPopcount = std::popcount(maskDiffMask);
+      // const uint conflictPopcount = std::popcount(conflictMask);
 
-      // AX + !AX = X
-      if (conflictPopcount == 1 && maskPopcount == maskPopcountJ) {
-         ProdTerm newTerm = ProdTerm::make(term.vals(), term.mask() & ~conflictMask);
-         if (!poppedTerm) {
-            pop(index);
-            --index;
-         }
-         poppedTerm = true;
-         swap(j, index);
-         normalizedPush(newTerm, index);
-         // continue;
-         // break;
-      }
-      // A + !AX = A + X
-      else if (conflictPopcount == 2 && maskDiffPopcount == 1) { //this condition is not right
-         ProdTerm newTerm = ProdTerm::make(termJ.vals(), termJ.mask() & ~(maskDiffMask ^ conflictMask));
-         // if (!poppedTerm) {
-            pop(index);
-            --index;
-         // }
-         poppedTerm = true;
-         swap(j, index);
-         normalizedPush(newTerm, index);
-         // continue;
-         // break;
-      }
-      // A + AX = A
-      else if (termJ.subsumes(term)) {
-         // if (!poppedTerm) {
-            pop(index);
-            --index;
-         // }
-         poppedTerm = true;
-         // continue;
-         // break;
-      } 
-      // AX + A = A
-      else if (term.subsumes(termJ)) {
-         // if (!poppedTerm) {
-            swap(j, index);
-            pop(index);
-            --index;
-         // }
-         poppedTerm = true;
-         // normalizedPush(term, index);
-         // continue;
-         // break;
+      if (termJ.subsumes(term)) {
+         pop(index);
+         --index;
+         break;
       }
    }
-   return index;
+   return index + 1;
 }
 uint inform::SopExpr::normalizedPushBack(ProdTerm term) {
    uint index = _terms.size();
@@ -118,7 +76,7 @@ uint inform::SopExpr::normalizedPushBack(ProdTerm term) {
 inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a private method
    for (uint i = 1; i < _terms.size();) {
       ProdTerm termI = _terms[i];
-      i = normalizedPush(termI, i) + 1;
+      i = normalizedPush(termI, i);
    }
    
    if (!_terms.size()) {
@@ -128,16 +86,14 @@ inform::SopExpr& inform::SopExpr::normalize() { //!TODO: maybe make this a priva
 }
 
 inform::SopExpr& inform::SopExpr::operator|=(const ProdTerm& term) {
-   _terms.push_back(term);
+   normalizedPushBack(term);
    return self;
-   //!TODO: normalize as each term is pushed (will be asymptotically faster than calling normalize() after)
 }
 inform::SopExpr& inform::SopExpr::operator|=(const SopExpr& other) {
    for (const auto& term : other._terms) {
-      _terms.push_back(term);
+      normalizedPushBack(term);
    }
    return self;
-   //!TODO: normalize as each term is pushed (will be asymptotically faster than calling normalize() after)
 }
 inform::SopExpr& inform::SopExpr::operator&=(const ProdTerm& term) {
    if (!_terms.size()) {
@@ -163,9 +119,9 @@ inform::SopExpr& inform::SopExpr::operator&=(const ProdTerm& term) {
    return self;
 }
 inform::SopExpr& inform::SopExpr::operator&=(const SopExpr& other) {
-   if (other._terms.size() == 1) {
-      return self &= other._terms[0];
-   }
+   // if (other._terms.size() == 1) {
+   //    return self &= other._terms[0];
+   // }
    auto tmp = self & other;
    std::destroy_at(this);
    return *new (this) SopExpr(std::move(tmp));
@@ -205,7 +161,7 @@ inform::SopExpr::SopExpr(const SopExpr& lhs, const SopExpr& rhs) {
          //add the product of each unordered pair of terms with one element from each SopExpr
          const ProdTerm tmp = i & j;
          if (!tmp.isContradiction()) { [[likely]]; //push term if it is not a contradiction
-            _terms.push_back(tmp);
+            normalizedPushBack(tmp);
          }
       }
    }

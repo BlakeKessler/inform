@@ -23,7 +23,7 @@ class inform::SopExpr {
       void swap(uint lhs, uint rhs);
    public:
       SopExpr():_terms{} {}
-      SopExpr(mcsl::arr_span<ProdTerm> terms):_terms{terms} {}
+      SopExpr(mcsl::arr_span<ProdTerm> terms):_terms{terms} { normalize(); }
       SopExpr(SopExpr&& other):_terms(std::move(other._terms)) {}
       SopExpr(const SopExpr& other):_terms(other._terms) {}
 

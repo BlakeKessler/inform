@@ -90,10 +90,10 @@ bool checkParams() {
       badParam = true;
       mcsl::err_printf(FMT("\033[1;31mERROR:\033[22;39m variable limit exceeded (%i > %i)\n"), maxVars, 8 * sizeof(uint));
    }
-   if (termCount > maxVars) {
-      badParam = true;
-      mcsl::err_printf(FMT("\033[1;31mERROR:\033[22;39m may not have more terms than variables (%i > %i)\n"), termCount, maxVars);
-   }
+   // if (termCount > maxVars) {
+   //    badParam = true;
+   //    mcsl::err_printf(FMT("\033[1;31mERROR:\033[22;39m may not have more terms than variables (%i > %i)\n"), termCount, maxVars);
+   // }
    if (inPath.size()) {
       mcsl::err_printf(FMT("\033[1;31mERROR:\033[22;39m batch input files are not yet supported\n"));
       badParam = true;
