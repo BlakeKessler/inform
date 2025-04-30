@@ -45,9 +45,14 @@ void inform::SopExpr::swap(uint lhs, uint rhs) {
 uint inform::SopExpr::normalizedPush(ProdTerm term, uint index) {
    assume(index < _terms.size());
    _terms[index] = term;
+
+   if (term.isContradiction()) {
+      pop(index);
+      return index;
+   }
    
    uint maskPopcount = std::popcount(term.mask());
-   bool poppedTerm = false;
+   // bool poppedTerm = false;
    for (uint j = 0; j < index; ++j) {
       ProdTerm termJ = _terms[j];
       // uint maskPopcountJ = std::popcount(termJ.mask());
@@ -63,6 +68,19 @@ uint inform::SopExpr::normalizedPush(ProdTerm term, uint index) {
          --index;
          break;
       }
+      if (term.subsumes(termJ)) {
+         _terms[j] = term;
+         pop(index);
+         --index;
+         break;
+      }
+      // if (!maskDiffMask && conflictPopcount == 1) {
+      //    pop(index);
+      //    --index;
+      //    ProdTerm newTerm = ProdTerm::make(term.vals(), term.mask() & ~conflictMask);
+      //    _terms[j] = newTerm; //this line specifically causes an infinite loop for some reason
+      //    break;
+      // }
    }
    return index + 1;
 }

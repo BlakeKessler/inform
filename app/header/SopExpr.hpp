@@ -1,3 +1,6 @@
+// A class representing a "sum of products expression" (disjunctive normal form)
+// It is basically just a wrapper around a vector of product terms, with special methods for pushing and popping objects to try to keep expressions simplified
+
 #ifndef INFORM_SOP_EXPR_HPP
 #define INFORM_SOP_EXPR_HPP
 
@@ -27,6 +30,9 @@ class inform::SopExpr {
       SopExpr(SopExpr&& other):_terms(std::move(other._terms)) {}
       SopExpr(const SopExpr& other):_terms(other._terms) {}
 
+      //!randomly generate a SopExpr object
+      //!had to be a constructor instead of a static method because of memory management
+      //!for explanations of the parameters, see the help menu (run the executable with no parameters)
       SopExpr(uint termCount, uint maxVars, uint sparsity);
       
       SopExpr move() { return std::move(self); }
